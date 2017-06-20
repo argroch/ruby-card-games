@@ -1,103 +1,63 @@
-require_relative 'deck_maker'
-# require_relative 'war_methods'
-
-def war_deal(deck)
-	# build a hand for each player out of the deck
-	# 26 times (deck.length by half), twice pull a random card from the deck and put into a player's hand, while deleting it from the original deck (so we never get the same sample-ing) 
-	(deck.length/2).times do 
-		@p1_hand.push(deck.delete(deck.sample))
-		@p2_hand.push(deck.delete(deck.sample))
-	end
-end
-
-# set value of face cards to 11-14,
-# or convert string value to integer
-def value_convert(str)
-	puts str
-	int_value = 0
-	case str
-		when "J" then int_value = 11
-		when "Q" then int_value = 12
-		when "K" then int_value = 13
-		when "A" then int_value = 14
-		else int_value = str.to_i
-	end
-	return int_value
-end
-
-def value_compare(val1,val2)
-	if val1 == val2
-		# it's a tie! that means: IT'S WAR!
-		war_time
-	elsif val1 > val2
-		# player 1 has won this round, the method returns the Integer 0 to decide a conditional statement after the method has been called
-		return 0
-	else
-		# player 2 has won this round, the method returns the Integer 1 to decide a conditional statement after the method has been called
-		return 1
-	end
-end
-
-def war_time
-	# each player puts down three additional cards:
-	# two facing down, one facing up
-	# whoever has the highest value card wins all the cards
+=begin
 	
-	# first we'll add the down-facing cards to the "war chest"
-	@war_chest += [@p1_hand.shift, @p1_hand.shift, @p2_hand.shift, @p2_hand.shift]
+Rules being followed:
+https://www.pagat.com/war/war.html 
 
-	# then we'll have the up-facing cards, we need those in their own variable to print out and pass along the value
-	p1_up_card = @p1_hand.shift
-	p2_up_card = @p2_hand.shift
-	# these cards will also be added to the "war chest"
-	@war_chest += [p1_up_card, p2_up_card]
-
-	puts "IT'S WAR!"
-	puts "Player One's card: #{p1_up_card[0]}#{p1_up_card[1]}"
-	puts "Player Two's card: #{p2_up_card[0]}#{p2_up_card[1]}"
-	puts ""
-
-	# have to convert before we compare:
-	p1_value = value_convert(p1_up_card[0])
-	p2_value = value_convert(p2_up_card[0])
-
-	# let's compare again
-	value_compare(p1_value, p2_value)
-end
+=end
 
 
-# build a deck!
+require_relative 'deck_maker'
+require_relative 'war_methods'
+
+
+
+
+# Build a deck!
 deck = deck_maker
 
-# initialize the hand arrays!
+# Initialize the hand arrays!
 # (go go gadet array hands?) 
 @p1_hand, @p2_hand, @war_chest = [], [], []
-# also there's an array to hold cards that are put down as a reults of 'war' being called
+# Also there's an array to hold cards that are put down as a reults of 'war' being called
 
-# fill those hand arrays up with cards from the deck
+# Fill those hand arrays up with cards from the deck
 war_deal(deck)
 
+=begin
+# Test to make sure both players have 26 cards each:
+puts @p1_hand.length
+puts "***********"
+puts @p2_hand.length
+=end
+
+
 count = 1
-# the game continues until someone gets all the cards, so someone is going to end up with an empty deck (array)
+# The game continues until someone gets all the cards, so someone is going to end up with an empty deck (array)
 until @p1_hand.length == 0 || @p2_hand.length == 0
 
-	# each player takes the first card from the "top" deck (to either return to their deck or their opponents)
+	# Each player takes the first card from the "top" of their deck (to either return to their deck or their opponents)
 	p1_card = @p1_hand.shift
 	p2_card = @p2_hand.shift
 
-	puts ""
-	puts "------"
-	puts ""
+	# Printing out the match-up of each rounds both serves user experience and testing:
+	puts "\n------\n"
 	puts "Round #{count}:"
 	puts "Player One's card: #{p1_card[0]}#{p1_card[1]}"
 	puts "Player Two's card: #{p2_card[0]}#{p2_card[1]}"
 
-	# set value of face cards to 11-14, or convert string value to integer (see 'war_methods' file for the method def)
+	# Set value of face cards to 11-14, or convert string value to integer (see 'war_methods' file for the method def)
 	p1_value = value_convert(p1_card[0])
 	p2_value = value_convert(p2_card[0])
 
-	# now time to compare!
+	# Make sure value conversion has worked:
+	# puts "Player 1 Value: #{p1_value}"
+	# puts "*******"
+	# puts "Player 2 Value: #{p2_value}"
+
+	# Now time to compare!
 	result = value_compare(p1_value, p2_value)
+
+
 
 	case result 
 		when 0 # player one wins
@@ -110,22 +70,33 @@ until @p1_hand.length == 0 || @p2_hand.length == 0
 			@war_chest.clear
 	end
 
+
+
 	count += 1
 	puts ""
 	puts "Deck sizes:"
-	print @p1_hand
+	# print @p1_hand
 	puts ""
 	puts "One: #{@p1_hand.length}"
-	print @p2_hand
+	# print @p2_hand
 	puts ""
 	puts "Two: #{@p2_hand.length}"
 	puts ""
 	puts "-------"
+
+	# We need to shuffle the hands every now and then or this thing is just gonna go on forever.
+	# Shuffling every 26 (initial # of cards in a hand) would seem the most logical, but we would still most often end up with over 1000 rounds each game, so I'm halving that number and shuffling every 13 rounds.
+	if count % 13 == 0 && ( @p1_hand.length != 0 && @p2_hand.length != 0 )
+		puts "*******\nShuffling...\n*******"  
+
+		@p1_hand.shuffle!
+		@p2_hand.shuffle!
+	end	
 end
 
 
-# if p1_hand.length == 0
-# 	puts "\n Player Two wins!"
-# else
-# 	puts "\n Player One wins!"
-# end
+if @p1_hand.length == 0
+	puts "\n Player Two wins!"
+else
+	puts "\n Player One wins!"
+end
